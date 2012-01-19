@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+import math
+import sys
+
+import pygst
+pygst.require('0.10')
+
+argv = sys.argv
+# work around gstreamer parsing sys.argv!
+sys.argv = []
+import gst, gtk
+sys.argv = argv
+
+from array import array
+
+sink_config = "autoaudiosink"
+rate = 8000.0
+freq = 400.0
+volume = 0.5
+t = 0
+
+if len(argv) > 2:
+    bpm = float(argv[1])
+else:
+    bpm = 60
+bps = bpm/60.0
+
+
+def need_data(src, length):
+    global t
+    data = array('f')
+    for i in xrange(length):
+        tsec = (t+i)/rate
+        on = (tsec*bps)%1 < 0.05
+        sample = math.sin(tsec*freq*math.pi*2)*on*volume
+        data.append(sample)
+    t += length
+    src.emit('push-buffer', gst.Buffer(data))
+
+pipeline = gst.Pipeline()
+
+source = gst.element_factory_make("appsrc")
+source_caps = gst.Caps('audio/x-raw-float,rate=(int)%i,channels=(int)1,width=(int)32,endianness=(int)1234' % rate)
+source.connect('need-data', need_data)
+source.set_property('caps', source_caps)
+
+convert = gst.element_factory_make("audioconvert")
+
+sink = gst.parse_bin_from_description(sink_config, True)
+
+pipeline.add_many(source, convert, sink)
+gst.element_link_many(source, convert, sink)
+
+pipeline.set_state(gst.STATE_PLAYING)
+gtk.main()
