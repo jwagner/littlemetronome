@@ -33,7 +33,7 @@ NAME = u"Little Metronome"
 
 sink_config = "autoaudiosink"
 rate = 48000.0
-freq = 400.0
+#freq = 400.0
 volume = 0.5
 t = 0
 
@@ -49,6 +49,7 @@ class Metronome(object):
         self.t = 0
         self.bpm = 80
         self.volume = 0.5
+        self.pattern = [(880, 0.8), (440, 0.5), (440, 0.5), (440, 0.5)]
 
         source = gst.element_factory_make("appsrc")
         source_caps = gst.Caps('audio/x-raw-float,rate=(int)%i,channels=(int)1,width=(int)32,endianness=(int)1234' % rate)
@@ -66,11 +67,15 @@ class Metronome(object):
         data = array('f')
         bps = self._bps
         volume = self.volume
+        pattern = self.pattern
+        pattern_len = len(pattern)
         for i in xrange(self.t, self.t+length):
             tsec = i/rate
-            envelope = max(0.0, 1.0-((( ((tsec*bps)%1.0)/bps -0.05)*20.0)**4.0))
+            beats = bps*tsec
+            freq, amplitude = pattern[int(beats%pattern_len)]
+            envelope = max(0.0, 1.0-((( (beats%1.0)/bps -0.05)*20.0)**4.0))
             #on = 1/((tsec*bps)%1.0)
-            sample = sin(tsec*freq*pi*2.0)*envelope*volume
+            sample = sin(tsec*freq*pi*2.0)*envelope*volume*amplitude
             data.append(sample)
         self.t += length
         src.emit('push-buffer', gst.Buffer(data))
@@ -128,11 +133,15 @@ class MainWindow(gtk.Window):
         self.tempo.scale.connect("value-changed", self.tempo_changed)
         self.tempo_changed(self.tempo)
 
+        self.pattern = gtk.Entry()
+        self.pattern.set_tooltip_text('Rhythm pattern 0 = Silent, 1-9 = different beeps')
+        self.pattern.connect("changed", self.pattern_changed)
+        self.pattern.set_text("1222")
+
         form = mygtk.form([
             ('Tempo', self.tempo),
             ('Increase', None),
-            ('Meter', None),
-            ('Pattern', None)
+            ('Pattern', self.pattern)
         ])
 
         vbox.pack_start(form)
@@ -141,12 +150,14 @@ class MainWindow(gtk.Window):
         vbox.pack_end(buttonbox, False, False)
 
         self.play_button = gtk.ToggleButton(gtk.STOCK_MEDIA_PLAY)
+        self.play_button.set_tooltip_text("Play (enter)")
         self.play_button.connect("toggled", self.play)
         self.play_button.set_use_stock(True)
         self.play_button.add_accelerator("clicked", self.accel_group, gtk.keysyms.Return, 0, ())
         buttonbox.pack_start(self.play_button, False, False)
 
         self.tap_button = gtk.Button('Tap')
+        self.tap_button.set_tooltip_text('Tap tempo (space)')
         self.tap_button.connect("clicked", self.tap)
         self.tap_button.add_accelerator("clicked", self.accel_group, ord(' '), 0, ())
         buttonbox.pack_start(self.tap_button, False, False)
@@ -165,6 +176,28 @@ class MainWindow(gtk.Window):
 
     def tempo_changed(self, sender):
         self.metronome.bpm = sender.get_value()
+
+    def pattern_changed(self, sender):
+        text = sender.get_text()
+        #0, A5, A4, E4
+        beeps = [(1.0, 0.0), 
+                (880.0, 0.8),
+                (440.0, 0.7),
+                (392.0, 0.6),
+                (349.23, 0.5),
+                (329.63, 0.5),
+                (293.66, 0.5),
+                (261.63, 0.5),
+                (246.94, 0.5),
+                (220.00, 0.5)
+                ]
+        pattern = []
+        for c in text:
+            n = ord(c) - ord('0')
+            if 0 <= n < len(beeps):
+                pattern.append(beeps[n])
+        if pattern:
+            self.metronome.pattern = pattern
 
     def tap(self, sender):
         t = datetime.now()
