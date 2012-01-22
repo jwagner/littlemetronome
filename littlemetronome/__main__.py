@@ -30,6 +30,8 @@ mygtk.install()
 from array import array
 
 NAME = u"Little Metronome"
+VERSION = u"0.1"
+WEBSITE = "http://29a.ch/"
 
 sink_config = "autoaudiosink"
 rate = 48000.0
@@ -169,6 +171,10 @@ class MainWindow(gtk.Window):
         self.volume_changed(self.volume_button, None)
         buttonbox.pack_start(self.volume_button, False, False)
 
+        button_about = gtk.Button(stock=gtk.STOCK_ABOUT)
+        button_about.connect("clicked", self.about)
+        buttonbox.pack_end(button_about)
+
         self.connect("destroy", gtk.main_quit)
 
     def volume_changed(self, sender, _):
@@ -213,6 +219,35 @@ class MainWindow(gtk.Window):
             self.metronome.play()
         else:
             self.metronome.pause()
+
+    def about(self, sender):
+        """show an about dialog"""
+        about = gtk.AboutDialog()
+        about.set_transient_for(self)
+        about.set_logo(mygtk.iconfactory.get_icon("littlemetronome", 128))
+        about.set_name(NAME)
+        about.set_version(VERSION)
+        about.set_authors(["Jonas Wagner"])
+#        about.set_translator_credits(_("translator-credits"))
+        about.set_copyright("Copyright (c) 2011 Jonas Wagner")
+        about.set_website(WEBSITE)
+        about.set_website_label(WEBSITE)
+        about.set_license("""
+Copyright (C) 2011 Jonas Wagner
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+""")
+        about.run()
+        about.destroy()
+
+
 
 
 if __name__ == "__main__":
