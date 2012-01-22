@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from datetime import datetime
 from math import sin, pi
 import sys
 
@@ -101,6 +102,7 @@ class MainWindow(gtk.Window):
         gtk.Window.__init__(self,gtk.WINDOW_TOPLEVEL)
 
         self.metronome = metronome
+        self.last_tap = datetime.now()
 
         self.init_ui()
 
@@ -122,12 +124,12 @@ class MainWindow(gtk.Window):
         vbox = gtk.VBox()
         self.add(vbox)
 
-        tempo = BPMScale(gtk.Adjustment(80.00, 10.00, 400.0, 1.0, 0.5))
-        tempo.scale.connect("value-changed", self.tempo_changed)
-        self.tempo_changed(tempo)
+        self.tempo = BPMScale(gtk.Adjustment(80.00, 10.00, 400.0, 1.0, 0.5))
+        self.tempo.scale.connect("value-changed", self.tempo_changed)
+        self.tempo_changed(self.tempo)
 
         form = mygtk.form([
-            ('Tempo', tempo),
+            ('Tempo', self.tempo),
             ('Increase', None),
             ('Meter', None),
             ('Pattern', None)
@@ -144,6 +146,11 @@ class MainWindow(gtk.Window):
         self.play_button.add_accelerator("clicked", self.accel_group, gtk.keysyms.Return, 0, ())
         buttonbox.pack_start(self.play_button, False, False)
 
+        self.tap_button = gtk.Button('Tap')
+        self.tap_button.connect("clicked", self.tap)
+        self.tap_button.add_accelerator("clicked", self.accel_group, ord(' '), 0, ())
+        buttonbox.pack_start(self.tap_button, False, False)
+
         self.volume_button = gtk.VolumeButton()
         self.volume_button.set_value(1.0)
         self.volume_button.set_relief(gtk.RELIEF_NORMAL)
@@ -158,6 +165,15 @@ class MainWindow(gtk.Window):
 
     def tempo_changed(self, sender):
         self.metronome.bpm = sender.get_value()
+
+    def tap(self, sender):
+        t = datetime.now()
+        td = (t - self.last_tap).total_seconds()
+        self.last_tap = t
+        bpm = 60.0/td
+
+        if bpm >= 20:
+            self.tempo.scale.set_value(bpm)
 
     def play(self, sender):
         if sender.get_active():
