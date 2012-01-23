@@ -77,8 +77,9 @@ class Metronome(object):
             envelope = 1.0-((( (beats%1.0)/bps -0.05)*20.0)**4.0)
             if envelope > 0.0:
                 freq, amplitude = pattern[int(beats%pattern_len)]
-                sample = sin(tsec*freq*pi*2.0)*envelope*volume*amplitude
-            data.append(sample)
+                data.append(sin(tsec*freq*pi*2.0)*envelope*volume*amplitude)
+            else:
+                data.append(0.0)
         self.t += length
         src.emit('push-buffer', gst.Buffer(data))
 
