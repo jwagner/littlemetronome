@@ -1,0 +1,3 @@
+#!/usr/bin/python
+from littlemetronome.main import run
+run()

@@ -122,7 +122,7 @@ class MainWindow(gtk.Window):
         except gobject.GError:
             print "could not load icon"
 
-        self.set_default_size(500, 200)
+        self.set_default_size(400, 180)
         self.set_border_width(5)
 
         self.accel_group = gtk.AccelGroup()
@@ -250,10 +250,14 @@ GNU General Public License for more details.
 
 
 
-if __name__ == "__main__":
+def run():
     metronome = Metronome(sink_config)
 
     win = MainWindow(metronome)
     win.show_all()
 
     gtk.main()
+
+
+if __name__ == "__main__":
+    run()
