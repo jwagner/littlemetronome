@@ -74,10 +74,10 @@ class Metronome(object):
         for i in xrange(self.t, self.t+length):
             tsec = i/rate
             beats = bps*tsec
-            freq, amplitude = pattern[int(beats%pattern_len)]
-            envelope = max(0.0, 1.0-((( (beats%1.0)/bps -0.05)*20.0)**4.0))
-            #on = 1/((tsec*bps)%1.0)
-            sample = sin(tsec*freq*pi*2.0)*envelope*volume*amplitude
+            envelope = 1.0-((( (beats%1.0)/bps -0.05)*20.0)**4.0)
+            if envelope > 0.0:
+                freq, amplitude = pattern[int(beats%pattern_len)]
+                sample = sin(tsec*freq*pi*2.0)*envelope*volume*amplitude
             data.append(sample)
         self.t += length
         src.emit('push-buffer', gst.Buffer(data))
@@ -188,7 +188,7 @@ class MainWindow(gtk.Window):
         #0, A5, A4, E4
         beeps = [(1.0, 0.0), 
                 (880.0, 0.8),
-                (440.0, 0.7),
+                (440.0, 0.75),
                 (392.0, 0.6),
                 (349.23, 0.5),
                 (329.63, 0.5),
