@@ -70,6 +70,7 @@ class Metronome(object):
         bps = self._bps
         volume = self.volume
         pattern = self.pattern
+        pi2 = pi*2
         pattern_len = len(pattern)
         for i in xrange(self.t, self.t+length):
             tsec = i/rate
@@ -77,7 +78,7 @@ class Metronome(object):
             envelope = 1.0-((( (beats%1.0)/bps -0.05)*20.0)**4.0)
             if envelope > 0.0:
                 freq, amplitude = pattern[int(beats%pattern_len)]
-                data.append(sin(tsec*freq*pi*2.0)*envelope*volume*amplitude)
+                data.append(sin(tsec*freq*pi2)*envelope*volume*amplitude)
             else:
                 data.append(0.0)
         self.t += length
