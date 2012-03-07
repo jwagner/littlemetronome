@@ -137,6 +137,15 @@ class MainWindow(gtk.Window):
         self.tempo.scale.connect("value-changed", self.tempo_changed)
         self.tempo_changed(self.tempo)
 
+        increase_box = gtk.HBox()
+        increase_box.pack_start(gtk.Label('by'))
+        self.increase_by = gtk.SpinButton(gtk.Adjustment(0.0, -10.0, 10.0, 1.0, 1.0))
+        increase_box.pack_start(self.increase_by)
+        increase_box.pack_start(gtk.Label('beats every'))
+        self.increase_every = gtk.SpinButton(gtk.Adjustment(1.0, 1.0, 100.0, 1.0, 1.0))
+        increase_box.pack_start(self.increase_every)
+        increase_box.pack_start(gtk.Label('seconds'))
+
         self.pattern = gtk.Entry()
         self.pattern.set_tooltip_text('Rhythm pattern 0 = Silent, 1-9 = different beeps')
         self.pattern.connect("changed", self.pattern_changed)
@@ -144,7 +153,7 @@ class MainWindow(gtk.Window):
 
         form = mygtk.form([
             ('Tempo', self.tempo),
-            ('Increase', None),
+            ('Increase', increase_box),
             ('Pattern', self.pattern)
         ])
 
